@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mean Temperature Change Line Plot</title>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
+    <style>
+    
+    
+        .gridlines .domain {
+          display: none;
+        }
+        
+        .gridlines line {
+          stroke: #aaa;
+        }
+          
+      
+        </style>
+      
+</head>
+<body>
+    <svg id="lineplot" width="600" height="400"></svg>
+<script>
+
+const svg = d3.select("svg#lineplot");
+    const width = svg.attr("width");
+    const height = svg.attr("height");
+    const margin = {top: 10, right: 10, bottom: 50, left: 50};
+    const plotWidth = width - margin.left - margin.right;
+    const plotHeight = height - margin.top - margin.bottom;
+
+    let annotations = svg.append("g").attr("id","annotations");
+    let plotArea = svg.append("g").attr("id","points")
+                    .attr("transform",`translate(${margin.left},${margin.top})`);
+
+    d3.csv("data/Annual_Surface_Temperature_Change.csv").then(data => {
+
+        // 1. Check data quality
+        console.log(data);
+      
+        // Process the data
+        const timeParser = d3.timeParse('%Y');
+        data.forEach(d => {
+            
+            d['Mean Temp Change'] = +d['Mean Temp Change']; // Ensure numeric value
+        });
+
+        // 2. Scales, axes, and gridlines
+
+        // Y axis (Temperature)
+        const tempExtent = d3.extent(data, d => d['Mean Temp Change']);
+        const tempScale = d3.scaleLinear().domain(tempExtent).range([plotHeight, 0]);
+
+        let leftAxis = d3.axisLeft(tempScale);
+        let leftGridlines = d3.axisLeft(tempScale)
+                            .tickSize(-plotWidth - 10)
+                            .tickFormat("");
+        annotations.append("g")
+            .attr("class", "y axis")
+            .attr("transform", `translate(${margin.left - 10},${margin.top})`)
+            .call(leftAxis);
+
+        annotations.append("g")
+            .attr("class", "y gridlines")
+            .attr("transform", `translate(${margin.left - 10},${margin.top})`)
+            .call(leftGridlines);
+
+        // X axis (Years)
+        const yearScale = d3.scaleTime().domain(1961,2022).range([0, plotWidth]);
+
+        let bottomAxis = d3.axisBottom(yearScale);
+        let bottomGridlines = d3.axisBottom(yearScale)
+                              .tickSize(-plotHeight - 10)
+                              .tickFormat("");
+
+        annotations.append("g")
+            .attr("class", "x axis")
+            .attr("transform", `translate(${margin.left},${plotHeight + margin.top + 10})`)
+            .call(bottomAxis);
+
+        annotations.append("g")
+            .attr("class", "x gridlines")
+            .attr("transform", `translate(${margin.left},${plotHeight + margin.top + 10})`)
+            .call(bottomGridlines);
+
+        // 3. Line generator
+        var lineGen = d3.line()
+            .x(d => yearScale(d['Year']))
+            .y(d => tempScale(d['Mean Temp Change']))
+            .curve(d3.curveMonotoneX);
+
+        // 4. Append a <path>, bind the data, and run the generator
+        plotArea.append("path")
+            .datum(data)
+            .attr("class", "line")
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-width", 3)
+            .attr("d", lineGen);
+
+        // 5. Add circles for each data point
+        plotArea.selectAll("circle").data(data)
+            .join("circle")
+            .attr("r", 3)
+            .attr("fill", "navy")
+            .attr("cx", d => yearScale(d['Year']))
+            .attr("cy", d => tempScale(d['Mean Temp Change']));
+    });
+
+</script>
+
+
+    </body>
