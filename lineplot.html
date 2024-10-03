@@ -36,23 +36,17 @@ const svg = d3.select("svg#lineplot");
     let annotations = svg.append("g").attr("id","annotations");
     let plotArea = svg.append("g").attr("id","points")
                     .attr("transform",`translate(${margin.left},${margin.top})`);
+   
+    d3.csv("data/global_annual_temp_change.csv").then(data => {
 
-    d3.csv("data/Annual_Surface_Temperature_Change.csv").then(data => {
-
-        // 1. Check data quality
-        console.log(data);
-      
-        // Process the data
-        const timeParser = d3.timeParse('%Y');
         data.forEach(d => {
             
-            d['Mean Temp Change'] = +d['Mean Temp Change']; // Ensure numeric value
+            d['temp_change'] = Number(d['temp_change']); // Ensure numeric value
+            d['year'] = Number(d['year']);
         });
 
-        // 2. Scales, axes, and gridlines
 
-        // Y axis (Temperature)
-        const tempExtent = d3.extent(data, d => d['Mean Temp Change']);
+        const tempExtent = d3.extent(data, d => d['temp_change']);
         const tempScale = d3.scaleLinear().domain(tempExtent).range([plotHeight, 0]);
 
         let leftAxis = d3.axisLeft(tempScale);
@@ -69,13 +63,12 @@ const svg = d3.select("svg#lineplot");
             .attr("transform", `translate(${margin.left - 10},${margin.top})`)
             .call(leftGridlines);
 
-        // X axis (Years)
-        const yearScale = d3.scaleTime().domain(1961,2022).range([0, plotWidth]);
+        const yearScale = d3.scaleLinear().domain([1992,2022]).range([0, plotWidth]);
 
         let bottomAxis = d3.axisBottom(yearScale);
         let bottomGridlines = d3.axisBottom(yearScale)
                               .tickSize(-plotHeight - 10)
-                              .tickFormat("");
+                              .tickFormat(" ");
 
         annotations.append("g")
             .attr("class", "x axis")
@@ -87,13 +80,12 @@ const svg = d3.select("svg#lineplot");
             .attr("transform", `translate(${margin.left},${plotHeight + margin.top + 10})`)
             .call(bottomGridlines);
 
-        // 3. Line generator
+        // making lines
         var lineGen = d3.line()
-            .x(d => yearScale(d['Year']))
-            .y(d => tempScale(d['Mean Temp Change']))
+            .x(d => yearScale(d['year']))
+            .y(d => tempScale(d['temp_change']))
             .curve(d3.curveMonotoneX);
 
-        // 4. Append a <path>, bind the data, and run the generator
         plotArea.append("path")
             .datum(data)
             .attr("class", "line")
@@ -102,16 +94,55 @@ const svg = d3.select("svg#lineplot");
             .attr("stroke-width", 3)
             .attr("d", lineGen);
 
-        // 5. Add circles for each data point
+        // adding circles for each data point
         plotArea.selectAll("circle").data(data)
             .join("circle")
             .attr("r", 3)
             .attr("fill", "navy")
-            .attr("cx", d => yearScale(d['Year']))
-            .attr("cy", d => tempScale(d['Mean Temp Change']));
+            .attr("cx", d => yearScale(d['year']))
+            .attr("cy", d => tempScale(d['temp_change']));
     });
 
 </script>
+<svg id="barchart" height="400" width="600"></svg>
+<script>
+    d3.csv("data/global_annual_temp_change.csv").then(data => {
+    const svg2= d3.select("#barchart");
+    const width2= svg2.attr("width");
+    const height2= svg2.attr("height");
+    const margins= {top: 10, right: 10, bottom: 50, left: 50};
+    const chartWidth = width2 - margins.left - margins.right;
+    const chartHeight = height2 - margins.top - margins.bottom;
 
+    const maxTemp = d3.max(data, d => d['temp_change']);
+    const xScale = d3.scaleLinear().domain([1992, 2022]).range([0, chartWidth]);
+    const yScale = d3.scaleLinear().domain([0, maxTemp]).range([chartHeight, 0]);
+    const xAxis= d3.axisBottom(xScale)
+                   .tickFormat(d => d);
+    const yAxis= d3.axisLeft(yScale);
+
+    
+    
+    svg2.append("g")
+        .attr("transform", `translate(${margins.left}, ${height2 - margins.bottom})`)
+        .call(xAxis);
+    
+    svg2.append("g")
+        .attr("transform", `translate(${margins.left}, ${margins.top})`)
+        .call(yAxis);
+
+        data.forEach(d => {
+        svg2.append("rect")
+            .attr("x", margins.left + xScale(d.year))
+            .attr("y", margins.top + yScale(d.temp_change))
+            .attr("width", chartWidth / data.length - 10) 
+            .attr("height", chartHeight - yScale(d.temp_change))
+            .style("fill", "#5555F0");
+    });
+
+    })
+    
+</script>
 
     </body>
+    </html>
