@@ -9,114 +9,29 @@
   <body>
     <h3>Team Members</h3>
     <p>Ayslin Walker, Imani Thompson, Fedinard Nyanyo</p>
-
-    <p id="sea-levels">
-      <svg id="sea-levels" width="600" height="600"></svg>
-
-      <script>
-        d3.csv("data/Change_in_Mean_Sea_Levels.csv").then(function (data) {
-          const svg = d3.select("svg#sea-levels");
-          const width = svg.attr("width");
-          const height = svg.attr("height");
-          const margins = { top: 40, right: 20, bottom: 50, left: 150 };
-          const chartWidth = width - margins.left - margins.right;
-          const chartHeight = height - margins.top - margins.bottom;
-
-          let chartArea = svg
-            .append("g")
-            .attr("transform", `translate(${margins.left},${margins.top})`);
-
-          let seaData = {};
-          let worldAverage;
-          data.forEach((d) => {
-            if (!seaData[d.Measure]) {
-              seaData[d.Measure] = {
-                sum: 0,
-                count: 0,
-              };
-            }
-            let value = parseFloat(d.Value);
-            seaData[d.Measure].sum += value;
-            seaData[d.Measure].count++;
-          });
-          worldAverage = seaData["World"].sum / seaData["World"].count;
-
-          let meanChangeBySea = Object.entries(seaData)
-            .map(([sea, data]) => ({
-              sea: sea,
-              meanChange: data.sum / data.count,
-            }))
-            .filter((d) => d.sea !== "World")
-            .sort((a, b) => a.meanChange - b.meanChange);
-
-          const xScale = d3
-            .scaleLinear()
-            .domain([0, d3.max(meanChangeBySea, (d) => d.meanChange)])
-            .range([0, chartWidth]);
-
-          const yScale = d3
-            .scaleBand()
-            .domain(meanChangeBySea.map((d) => d.sea))
-            .range([0, chartHeight])
-            .padding(0.3);
-
-          meanChangeBySea.forEach((d) => {
-            chartArea
-              .append("rect")
-              .attr("class", "bar")
-              .attr("x", xScale(0))
-              .attr("y", yScale(d.sea))
-              .attr("width", xScale(d.meanChange) - xScale(0))
-              .attr("height", yScale.bandwidth())
-              .attr("fill", "#FFA500");
-
-            chartArea
-              .append("text")
-              .attr("x", xScale(0) - 5)
-              .attr("y", yScale(d.sea) + yScale.bandwidth() / 2)
-              .attr("dy", ".35em")
-              .attr("text-anchor", "end")
-              .text(d.sea);
-          });
-
-          chartArea
-            .append("line")
-            .attr("x1", xScale(worldAverage))
-            .attr("y1", 0)
-            .attr("x2", xScale(worldAverage))
-            .attr("y2", chartHeight)
-            .attr("stroke", "black")
-            .attr("stroke-width", 2);
-
-          chartArea
-            .append("text")
-            .attr("x", xScale(worldAverage))
-            .attr("y", -10)
-            .attr("text-anchor", "middle")
-            .text(`World Average(${worldAverage.toFixed(2)} mm)`);
-
-          chartArea
-            .append("g")
-            .attr("transform", `translate(0,${chartHeight})`)
-            .call(d3.axisBottom(xScale).ticks(10));
-
-          svg
-            .append("text")
-            .attr("x", width / 2)
-            .attr("y", 20)
-            .attr("text-anchor", "middle")
-            .style("font-size", "16px")
-            .style("font-weight", "bold")
-            .text("Trend in Mean Sea Levels");
-
-          svg
-            .append("text")
-            .attr("transform", `translate(${width / 2},${height - 10})`)
-            .style("text-anchor", "middle")
-            .text("Mean yearly change in sea level (mm)");
-        });
-      </script>
-    </p>
+<div class="charts">
+  <h2 class="question">Are global average temperature change and sea levels related?</h2>
+    <style>
+.space{
+  padding-bottom: 20px;
+  
+}
+.question {
+    background-color: lightblue;
+    padding: 20px;
+    text-align: center;
+  }
+  .charts {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-self: center;
+  }
+  body {
+    font-family:Arial, Helvetica, sans-serif;
+  }
+    </style>
+    <div class="space"></div>
     <style>
     
     
@@ -130,9 +45,7 @@
         
     
       </style>
-    
-</head>
-<body>
+    <div class="charts">
   <svg id="lineplot" width="600" height="400"></svg>
 <script>
 
@@ -167,7 +80,10 @@ const svg = d3.select("svg#lineplot");
           .attr("class", "y axis")
           .attr("transform", `translate(${margin.left - 10},${margin.top})`)
           .call(leftAxis);
-
+      annotations.append('text')
+               .attr('transform', `translate(${margin.left - 40}, ${margin.top + plotHeight / 2}) rotate(-90)`)
+               .style('text-anchor', 'middle')
+               .text('Temperature Change (Celsius)');          
       annotations.append("g")
           .attr("class", "y gridlines")
           .attr("transform", `translate(${margin.left - 10},${margin.top})`)
@@ -184,10 +100,22 @@ const svg = d3.select("svg#lineplot");
           .attr("transform", `translate(${margin.left},${plotHeight + margin.top + 10})`)
           .call(bottomAxis);
 
+      annotations.append('text')
+                 .attr('transform', `translate(${margin.left + plotWidth / 2}, ${plotHeight + margin.top + 45})`)
+                 .style('text-anchor', 'middle')
+                 .text('Years')
       annotations.append("g")
           .attr("class", "x gridlines")
           .attr("transform", `translate(${margin.left},${plotHeight + margin.top + 10})`)
           .call(bottomGridlines);
+
+            annotations.append("text")
+            .attr("x", plotWidth / 2)
+            .attr("y", 10)
+            .attr("text-anchor", "middle")
+            .style("font-size", "16px")
+            .style("font-weight", "bold")
+            .text("Global Average Temperature Change");
 
       // making the lines
       var lineGen = d3.line()
@@ -210,9 +138,12 @@ const svg = d3.select("svg#lineplot");
           .attr("fill", "navy")
           .attr("cx", d => yearScale(d['year']))
           .attr("cy", d => tempScale(d['temp_change']));
+
   });
 
 </script>
+<div class="space"></div>
+
 <svg id="barchart" height="400" width="600"></svg>
 <script>
 
@@ -236,11 +167,25 @@ const svg = d3.select("svg#lineplot");
   svg2.append("g")
       .attr("transform", `translate(${margins.left}, ${height2 - margins.bottom})`)
       .call(xAxis);
+  svg2.append('text')
+      .attr('transform', `translate(${margin.left + chartWidth / 2}, ${chartHeight + margin.top + 45})`)
+      .style('text-anchor', 'middle')
+      .text('Years');
+  svg2.append("text")
+      .attr("x", plotWidth / 2)
+      .attr("y", 10)
+      .attr("text-anchor", "middle")
+      .style("font-size", "16px")
+      .style("font-weight", "bold")
+      .text("Global Average Temperature Change");
   
   svg2.append("g")
       .attr("transform", `translate(${margins.left}, ${margins.top})`)
       .call(yAxis);
-
+  svg2.append('text')
+      .attr('transform', `translate(${margin.left - 40}, ${margin.top + chartHeight / 2}) rotate(-90)`)
+      .style('text-anchor', 'middle')
+      .text('Temperature Change (Celsius)'); 
       data.forEach(d => {
       svg2.append("rect")
           .attr("x", margins.left + xScale(d['year']))
@@ -249,9 +194,118 @@ const svg = d3.select("svg#lineplot");
           .attr("height", chartHeight - yScale(d['temp_change']))
           .style("fill", "darkred");
   });
-
+ 
   })
   
 </script>
+
+<p id="sea-levels">
+  <svg id="sea-levels" width="600" height="600"></svg>
+
+  <script>
+    d3.csv("data/Change_in_Mean_Sea_Levels.csv").then(function (data) {
+      const svg = d3.select("svg#sea-levels");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margins = { top: 40, right: 20, bottom: 50, left: 150 };
+      const chartWidth = width - margins.left - margins.right;
+      const chartHeight = height - margins.top - margins.bottom;
+
+      let chartArea = svg
+        .append("g")
+        .attr("transform", `translate(${margins.left},${margins.top})`);
+
+      let seaData = {};
+      let worldAverage;
+      data.forEach((d) => {
+        if (!seaData[d.Measure]) {
+          seaData[d.Measure] = {
+            sum: 0,
+            count: 0,
+          };
+        }
+        let value = parseFloat(d.Value);
+        seaData[d.Measure].sum += value;
+        seaData[d.Measure].count++;
+      });
+      worldAverage = seaData["World"].sum / seaData["World"].count;
+
+      let meanChangeBySea = Object.entries(seaData)
+        .map(([sea, data]) => ({
+          sea: sea,
+          meanChange: data.sum / data.count,
+        }))
+        .filter((d) => d.sea !== "World")
+        .sort((a, b) => a.meanChange - b.meanChange);
+
+      const xScale = d3
+        .scaleLinear()
+        .domain([0, d3.max(meanChangeBySea, (d) => d.meanChange)])
+        .range([0, chartWidth]);
+
+      const yScale = d3
+        .scaleBand()
+        .domain(meanChangeBySea.map((d) => d.sea))
+        .range([0, chartHeight])
+        .padding(0.3);
+
+      meanChangeBySea.forEach((d) => {
+        chartArea
+          .append("rect")
+          .attr("class", "bar")
+          .attr("x", xScale(0))
+          .attr("y", yScale(d.sea))
+          .attr("width", xScale(d.meanChange) - xScale(0))
+          .attr("height", yScale.bandwidth())
+          .attr("fill", "#FFA500");
+
+        chartArea
+          .append("text")
+          .attr("x", xScale(0) - 5)
+          .attr("y", yScale(d.sea) + yScale.bandwidth() / 2)
+          .attr("dy", ".35em")
+          .attr("text-anchor", "end")
+          .text(d.sea);
+      });
+
+      chartArea
+        .append("line")
+        .attr("x1", xScale(worldAverage))
+        .attr("y1", 0)
+        .attr("x2", xScale(worldAverage))
+        .attr("y2", chartHeight)
+        .attr("stroke", "black")
+        .attr("stroke-width", 2);
+
+      chartArea
+        .append("text")
+        .attr("x", xScale(worldAverage))
+        .attr("y", -5)
+        .attr("text-anchor", "middle")
+        .text(`World Average(${worldAverage.toFixed(2)} mm)`);
+
+      chartArea
+        .append("g")
+        .attr("transform", `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale).ticks(10));
+
+      svg
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 18)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Trend in Mean Sea Levels");
+
+      svg
+        .append("text")
+        .attr("transform", `translate(${width / 2},${height - 10})`)
+        .style("text-anchor", "middle")
+        .text("Mean yearly change in sea level (mm)");
+    });
+  </script>
+</p>
+</div>
   </body>
 </html>
